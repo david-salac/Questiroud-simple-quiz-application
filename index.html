@@ -49,6 +49,8 @@
     var PLACEHOLDER_NAME = "Your name";
     var CODE_BELOW_NAME_INPUT = "<br>";
 
+    var SENDING_STATUS = "Sending, wait!";
+
     // Error message content
     var NOT_ALL_REQUIRED_QUESTIONS_ANSWERED = "You have to answer all required questions";
 
@@ -174,6 +176,7 @@
         $("#questionare-quiz-wrong").hide();
         $("#questionare-contact").hide();
         $("#questionare-response").show();
+
         $("#questionare-response").html(response_message);
     }
 
@@ -196,6 +199,11 @@
         }
         else if($("#questionare-quiz").is(":hidden") && $("#questionare-response").is(":hidden")){
             // Third step, show contact
+            $("#questionare-quiz").hide();
+            $("#questionare-quiz-wrong").hide();
+            $("#questionare-contact").hide();
+            $("#questionare-response").show();
+            $("#questionare-response").html(SENDING_STATUS);
 
             // Remove validation field
             $("#validation").remove();

@@ -1,11 +1,11 @@
 <?php
 /* =================== MAIN CONFIGURATION ================================== */
 define("LINK_TO_JSON", "questions.json");  // Link to JSON file (or URL)
-define("ALLOW_ACCESS_CONTROL_ALLOW_ORIGIN", true); // Should be false in production
+define("DEBUG_MODE", true); // For running locally only
 define("FILE_PATH_TO_EXPORT", "results.csv"); // Path to file where information about user are exported
 /* ========================================================================= */
 
-if (ALLOW_ACCESS_CONTROL_ALLOW_ORIGIN) {
+if (DEBUG_MODE) {
     header('Access-Control-Allow-Origin: *', false);
 }
 header('Content-type: application/json; charset=utf-8', false);
@@ -120,6 +120,14 @@ function render_layout_wrapper($page_content) {
 function write_to_file($name_of_user, $address_of_user) {
     /**Save information about user to file.
     */
+    // Clean saved fields
+    // 1) No ',' symbol
+    $save_name = str_replace(',', '-', $name_of_user);
+    $save_email = str_replace(',', '-', $address_of_user);
+    // 1) No '\n' symbol
+    $save_name = str_replace("\n", " ", $save_name);
+    $save_email = str_replace("\n", " ", $save_email);
+
     $myfile;
     if (!file_exists(FILE_PATH_TO_EXPORT)) {
         $myfile = fopen(FILE_PATH_TO_EXPORT, "w+") or die(json_encode(array("message" => "Unable to open file ".FILE_PATH_TO_EXPORT." in mode 'w+'!")));
@@ -131,7 +139,7 @@ function write_to_file($name_of_user, $address_of_user) {
     // Get current time
     $time_now = time();
     // Write result
-    fwrite($myfile, $name_of_user.",".$address_of_user.','.date("Y-m-dTH:i:s",$time_now)."\n");
+    fwrite($myfile, $save_name.",".$save_email.','.date("Y-m-dTH:i:s",$time_now)."\n");
     fclose($myfile);
 }
 
@@ -259,24 +267,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $address = $data['address_of_user'];
     $name_of_user = $data['name_of_user'];
 
-    if(!filter_var($address, FILTER_VALIDATE_EMAIL)){
+    if(!filter_var($address, FILTER_VALIDATE_EMAIL)) {
         // Incorrect email
         header('HTTP/1.1 400 Bad Request', false, 400);
         exit(json_encode(array("message" => "Wrong email format!")));
     }
 
-    if(strlen($name_of_user) == 0){
+    if(strlen($name_of_user) == 0) {
         // Incorrect email
         header('HTTP/1.1 400 Bad Request', false, 400);
         exit(json_encode(array("message" => "Wrong name format!")));
     }
 
-    // Save info about user to file
-    write_to_file($name_of_user, $address);
-
-    // Return 200 if OK
-    header('HTTP/1.1 200 OK', false, 200);
-    //exit(json_encode(array("message" => SUCCESS_MESSAGE)));
-
-    exit(json_encode(array("message" => prepare_result_message($json_decoded, $selected_values, $name_of_user, $address))));
+    if (!DEBUG_MODE) {
+        // Save info about user to file (append if exist)
+        write_to_file($name_of_user, $address);
+        // Return 200 if OK
+        header('HTTP/1.1 200 OK', false, 200);
+        exit(json_encode(array("message" => SUCCESS_MESSAGE)));
+    } else {
+        // DEBUG (local) mode
+        header('HTTP/1.1 200 OK', false, 200);
+        // Return the content of the mail in response
+        exit(json_encode(array("message" => prepare_result_message($json_decoded, $selected_values, $name_of_user, $address))));
+    }
 }
