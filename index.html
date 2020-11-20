@@ -4,20 +4,31 @@
     <meta charset="UTF-8">
     <title>Simple questionnaire</title>
     <script src="jquery-3.5.1.min.js"></script>
+    <style>
+        .optional_question {
+            font-style: italic;
+        }
+        .required_question {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-<form id="questionare"></form>
+<form id="questionare">
+    <input type="hidden" name="validation" id="validation">
+    <div id="questionare-quiz"></div>
+    <div id="questionare-quiz-wrong"></div>
+    <div id="questionare-contact"></div>
+    <div id="questionare-response"></div>
+</form>
 <script>
-    /*
-    TODO: Check if all is fill
-    TODO: Next page with email submitting.
-    TODO: Page that everything has been sent.
-    */
     var JSON_URL = "http://localhost:5560/questions.php";
     var TARGET_POST_URL = "http://localhost:5560/";
+    var NEXT_BUTTON_TEXT = "Next";
+    var NEXT_BUTTON_CLASS = "next_button";
     var SUBMIT_BUTTON_TEXT = "SUBMIT";
     var SUBMIT_BUTTON_CLASS = "submit_button";
-    var PAIR_TAG_FOR_QUESTION = "strong";
+    var PAIR_TAG_FOR_QUESTION = "span";
     var CLASS_FOR_QUESTION = "some_question";
     var SEPARATOR_QUESTION_OPTIONS = "<br>";
     var SEPARATOR_QUESTIONS = "<br><br>";
@@ -25,55 +36,178 @@
     var CLASS_FOR_OPTION_INPUT = "some_option";
     var SEPARATOR_OPTIONS = " ";
     var CLASS_FOR_LABEL = "some_label";
+    var CLASS_OPTIONAL_QUESTION = "optional_question";
+    var CLASS_REQUIRED_QUESTION = "required_question";
+
+    var CODE_ABOVE_EMAIL_INPUT = "";
+    var CLASS_EMAIL_INPUT = "user_email";
+    var PLACEHOLDER_EMAIL = "Your email";
+    var CODE_BELOW_EMAIL_INPUT = "<br>";
+
+    var CODE_ABOVE_NAME_INPUT = "";
+    var CLASS_NAME_INPUT = "user_name";
+    var PLACEHOLDER_NAME = "Your name";
+    var CODE_BELOW_NAME_INPUT = "<br>";
+
+    // Error message content
+    var NOT_ALL_REQUIRED_QUESTIONS_ANSWERED = "You have to answer all required questions";
 
     function add_question(question, question_i, is_last) {
         // Append answer
-        $('#questionare').append("<" + PAIR_TAG_FOR_QUESTION + " class=\"" + CLASS_FOR_QUESTION + "\">" + question['question'] + "</" + PAIR_TAG_FOR_QUESTION + ">");
-        $('#questionare').append(SEPARATOR_QUESTION_OPTIONS);
+        var question_classes = CLASS_FOR_QUESTION
+        if (question['required']) {
+            question_classes += " " + CLASS_REQUIRED_QUESTION;
+        }
+        else {
+            question_classes += " " + CLASS_OPTIONAL_QUESTION;
+        }
+
+        $('#questionare-quiz').append("<" + PAIR_TAG_FOR_QUESTION + " class=\"" + question_classes + "\">" + question['question'] + "</" + PAIR_TAG_FOR_QUESTION + ">");
+        $('#questionare-quiz').append(SEPARATOR_QUESTION_OPTIONS);
         // Append options
         var id_option = 'option_' + question_i;
+
+        // List of all options (to check if anything is checked later)
+        var list_of_options = [];
         for (opt_i = 0; opt_i < question['options'].length; opt_i++) {
             var id_and_value = 'option_' + question_i + '_' + opt_i;
+            list_of_options.push(id_and_value);
+
             var input_type = "radio";
             if (question['type'] == "multiple_correct") {
-                $('#questionare').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" type="checkbox" name="' + id_and_value + '" value="' + id_and_value + '">');
+                $('#questionare-quiz').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" type="checkbox" name="' + id_and_value + '" value="' + id_and_value + '">');
             }
             else if (question['type'] == "one_correct") {
-                $('#questionare').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" name="' + id_option + '" type="radio" value="' + id_and_value + '">');
+                $('#questionare-quiz').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" name="' + id_option + '" type="radio" value="' + id_and_value + '">');
             }
 
-            $('#questionare').append('<label class="' + CLASS_FOR_LABEL + '" for="' + id_and_value + '">' + question['options'][opt_i]['option'] + '</label>');
-            $('#questionare').append(SEPARATOR_OPTIONS);
+            $('#questionare-quiz').append('<label class="' + CLASS_FOR_LABEL + '" for="' + id_and_value + '">' + question['options'][opt_i]['option'] + '</label>');
+            $('#questionare-quiz').append(SEPARATOR_OPTIONS);
         }
         if (!is_last) {
-            $('#questionare').append(SEPARATOR_QUESTIONS);
+            $('#questionare-quiz').append(SEPARATOR_QUESTIONS);
         } else {
-            $('#questionare').append(SEPARATOR_QUESTIONS_SUBMIT);
+            $('#questionare-quiz').append(SEPARATOR_QUESTIONS_SUBMIT);
+        }
+
+        // Create a list of required values
+        // Prefix for new values
+        var prefix_validation = $("#validation").val() + ";";
+        if ($("#validation").val() == "") {
+            prefix_validation = "";
+        }
+        if (question['required']) {
+            $("#validation").val(prefix_validation + list_of_options.join(","));
+        }
+        else {
+            $("#validation").val(prefix_validation + "");
         }
     }
+
+    function render_questionnaire(json) {
+        // Manage content sequence
+        $("#questionare-quiz").show();
+        $("#questionare-quiz-wrong").hide();
+        $("#questionare-contact").hide();
+        $("#questionare-response").hide();
+
+        for (qu_i = 0; qu_i < json['questionnaire'].length; qu_i++) {
+            var this_is_last = false;  // Indicate last question in series
+            if (qu_i == json['questionnaire'].length - 1) {
+                this_is_last = true;
+            }
+            add_question(json['questionnaire'][qu_i], qu_i, this_is_last);
+        }
+        $('#questionare-quiz').append('<input class="' + NEXT_BUTTON_CLASS + '" type="submit" value="' + NEXT_BUTTON_TEXT + '">');
+    }
+
+    function validate_questionnaire() {
+        /** Check if all answers are answered.
+        */
+        var _array_of_questions = [];
+        _array_of_questions.push($("#validation").val().split(";"));
+        var array_of_questions = _array_of_questions[0];
+        for (quest_idx = 0; quest_idx < array_of_questions.length; quest_idx++) {
+            if (array_of_questions[quest_idx].length == 0) {
+                // Optional option (do not have to select)
+                continue;
+            }
+            var _array_of_values = [];
+            _array_of_values.push(array_of_questions[quest_idx].split(","));
+            var array_of_values = _array_of_values[0];
+
+            var error_in_answer = true;
+            for (answ_idx = 0; answ_idx < array_of_values.length; answ_idx++) {
+                var id_and_value = array_of_values[answ_idx];
+                if ( $("#" + id_and_value).is(':checked')) {
+                    error_in_answer = false;
+                    break;
+                }
+            }
+            if (error_in_answer) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function render_contact() {
+        // Manage content sequence
+        $("#questionare-quiz").hide();
+        $("#questionare-quiz-wrong").hide();
+        $("#questionare-contact").show();
+        $("#questionare-response").hide();
+
+        $("#questionare-contact").append(CODE_ABOVE_NAME_INPUT);
+        $("#questionare-contact").append('<input type="text" id="name_of_user" name="name_of_user" class="' + CLASS_NAME_INPUT + '" placeholder="' + PLACEHOLDER_NAME + '" required>');
+        $("#questionare-contact").append(CODE_BELOW_NAME_INPUT);
+
+        $("#questionare-contact").append(CODE_ABOVE_EMAIL_INPUT);
+        $("#questionare-contact").append('<input type="email" id="address_of_user" name="address_of_user" class="' + CLASS_EMAIL_INPUT + '" placeholder="' + PLACEHOLDER_EMAIL + '" required>');
+        $("#questionare-contact").append(CODE_BELOW_EMAIL_INPUT);
+        $('#questionare-contact').append('<input class="' + SUBMIT_BUTTON_CLASS + '" type="submit" value="' + SUBMIT_BUTTON_TEXT + '">');
+    }
+
+    function render_response(response_message) {
+        // Manage content sequence
+        $("#questionare-quiz").hide();
+        $("#questionare-quiz-wrong").hide();
+        $("#questionare-contact").hide();
+        $("#questionare-response").show();
+        $("#questionare-response").html(response_message);
+    }
+
     $( document ).ready(function() {
         $.getJSON(JSON_URL, function(json) {
-            for (qu_i = 0; qu_i < json['questionnaire'].length; qu_i++) {
-                var this_is_last = false;  // Indicate last question in series
-                if (qu_i == json['questionnaire'].length - 1) {
-                    this_is_last = true;
-                }
-                add_question(json['questionnaire'][qu_i], qu_i, this_is_last);
-            }
-            $('#questionare').append('<input class="' + SUBMIT_BUTTON_CLASS + '" type="submit" value="' + SUBMIT_BUTTON_TEXT + '">');
+            $("#questionare-quiz-wrong").html(NOT_ALL_REQUIRED_QUESTIONS_ANSWERED);
+
+            render_questionnaire(json);
         });
     });
     $("#questionare").submit(function( event ) {
         event.preventDefault();
-
-        // Send data
-        $.post(
-            TARGET_POST_URL,
-            $("#questionare").serialize(),
-            function(response, status) {
-                console.log(response);
+        if($("#questionare-contact").is(":hidden") && $("#questionare-response").is(":hidden")){
+            if (validate_questionnaire()) {
+                // Second step, show contact
+                render_contact();
+            } else {
+                $("#questionare-quiz-wrong").show();
             }
-        );
+        }
+        else if($("#questionare-quiz").is(":hidden") && $("#questionare-response").is(":hidden")){
+            // Third step, show contact
+
+            // Remove validation field
+            $("#validation").remove();
+
+            $.post(
+                TARGET_POST_URL,
+                $("#questionare").serialize(),
+                function(response, status) {
+                    render_response(response['message']);
+                }
+            );
+        }
     });
 </script>
 </body>

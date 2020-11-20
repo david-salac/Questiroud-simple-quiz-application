@@ -3,6 +3,7 @@
         {
             "question": "Some super question 1?",
             "type": "multiple_correct",
+            "required": true,
             "options": [
                 {
                     "option": "Some answer 1",
@@ -25,6 +26,7 @@
         {
             "question": "Some super question 2?",
             "type": "multiple_correct",
+            "required": false,
             "options": [
                 {
                     "option": "Some answer 1",
@@ -47,6 +49,7 @@
         {
             "question": "Some super question 3?",
             "type": "one_correct",
+            "required": true,
             "options": [
                 {
                     "option": "Some answer 1",
