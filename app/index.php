@@ -1,9 +1,13 @@
 <?php
-header('Access-Control-Allow-Origin: *', false);
-header('Content-type: application/json; charset=utf-8', false);
+/* =================== MAIN CONFIGURATION ================================== */
+define("LINK_TO_JSON", "questions.json");  // Link to JSON file (or URL)
+define("ALLOW_ACCESS_CONTROL_ALLOW_ORIGIN", true); // Should be false in production
+/* ========================================================================= */
 
-$LINK_TO_JSON = "questions.json";
-$SUCCESS_MESSAGE = "Email sent!";
+if (ALLOW_ACCESS_CONTROL_ALLOW_ORIGIN) {
+    header('Access-Control-Allow-Origin: *', false);
+}
+header('Content-type: application/json; charset=utf-8', false);
 
 /* ====================== CONTENT DEFINITION =============================== */
 define("ADDRESSING_PREFIX", "Dear ");
@@ -13,6 +17,7 @@ define("QUESTION_SCORE_PREFIX", "Score for question: ");
 define("QUESTION_SCORE_SUFFIX", ".");
 define("TOTAL_SCORE_PREFIX", "Total score: ");
 define("TOTAL_SCORE_SUFFIX", " percent.");
+define("SUCCESS_MESSAGE", " Email sent!");
 /* ========================================================================= */
 
 
@@ -117,7 +122,6 @@ function render_layout_wrapper($page_content) {
 
 function get_list_of_post_keys($decoded_json) {
     /**Return list of all acceptable values in JSON for POST keys.
-
     @param decoded_json: JSON dataclass with all questions and answers.
     */
     $list_of_options = array();
@@ -136,7 +140,6 @@ function get_list_of_post_keys($decoded_json) {
 
 function prepare_result_message($decoded_json, $selected_values, $name_of_user, $address_of_user) {
     /**Prepare the HTML email response.
-
     @param decoded_json: JSON dataclass with all questions and answers.
     @param selected_values: Options selected by user.
     @return: HTML code of response
@@ -200,11 +203,13 @@ function prepare_result_message($decoded_json, $selected_values, $name_of_user, 
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Process the request.
+
     // Encapsulate incoming data
     $data = array();
 
     // Decode incoming JSON
-    $json_content = file_get_contents($LINK_TO_JSON);
+    $json_content = file_get_contents(LINK_TO_JSON);
     $json_decoded = json_decode($json_content);
 
     $question_post_keys = get_list_of_post_keys($json_decoded);
@@ -253,7 +258,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Return 200 if OK
     header('HTTP/1.1 200 OK', false, 200);
-    //exit(json_encode(array("message" => $SUCCESS_MESSAGE)));
+    //exit(json_encode(array("message" => SUCCESS_MESSAGE)));
 
     exit(json_encode(array("message" => prepare_result_message($json_decoded, $selected_values, $name_of_user, $address))));
 }
