@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple questionnaire</title>
+    <script src="jquery-3.5.1.min.js"></script>
+</head>
+<body>
+<form id="questionare"></form>
+<script>
+    /*
+    TODO: Check if all is fill
+    TODO: Next page with email submitting.
+    TODO: Page that everything has been sent.
+    */
+    var JSON_URL = "http://localhost:5560/questions.php";
+    var TARGET_POST_URL = "http://localhost:5560/";
+    var SUBMIT_BUTTON_TEXT = "SUBMIT";
+    var SUBMIT_BUTTON_CLASS = "submit_button";
+    var PAIR_TAG_FOR_QUESTION = "strong";
+    var CLASS_FOR_QUESTION = "some_question";
+    var SEPARATOR_QUESTION_OPTIONS = "<br>";
+    var SEPARATOR_QUESTIONS = "<br><br>";
+    var SEPARATOR_QUESTIONS_SUBMIT = "<br>";
+    var CLASS_FOR_OPTION_INPUT = "some_option";
+    var SEPARATOR_OPTIONS = " ";
+    var CLASS_FOR_LABEL = "some_label";
+
+    function add_question(question, question_i, is_last) {
+        // Append answer
+        $('#questionare').append("<" + PAIR_TAG_FOR_QUESTION + " class=\"" + CLASS_FOR_QUESTION + "\">" + question['question'] + "</" + PAIR_TAG_FOR_QUESTION + ">");
+        $('#questionare').append(SEPARATOR_QUESTION_OPTIONS);
+        // Append options
+        var id_option = 'option_' + question_i;
+        for (opt_i = 0; opt_i < question['options'].length; opt_i++) {
+            var id_and_value = 'option_' + question_i + '_' + opt_i;
+            var input_type = "radio";
+            if (question['type'] == "multiple_correct") {
+                $('#questionare').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" type="checkbox" name="' + id_and_value + '" value="' + id_and_value + '">');
+            }
+            else if (question['type'] == "one_correct") {
+                $('#questionare').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" name="' + id_option + '" type="radio" value="' + id_and_value + '">');
+            }
+
+            $('#questionare').append('<label class="' + CLASS_FOR_LABEL + '" for="' + id_and_value + '">' + question['options'][opt_i]['option'] + '</label>');
+            $('#questionare').append(SEPARATOR_OPTIONS);
+        }
+        if (!is_last) {
+            $('#questionare').append(SEPARATOR_QUESTIONS);
+        } else {
+            $('#questionare').append(SEPARATOR_QUESTIONS_SUBMIT);
+        }
+    }
+    $( document ).ready(function() {
+        $.getJSON(JSON_URL, function(json) {
+            for (qu_i = 0; qu_i < json['questionnaire'].length; qu_i++) {
+                var this_is_last = false;  // Indicate last question in series
+                if (qu_i == json['questionnaire'].length - 1) {
+                    this_is_last = true;
+                }
+                add_question(json['questionnaire'][qu_i], qu_i, this_is_last);
+            }
+            $('#questionare').append('<input class="' + SUBMIT_BUTTON_CLASS + '" type="submit" value="' + SUBMIT_BUTTON_TEXT + '">');
+        });
+    });
+    $("#questionare").submit(function( event ) {
+        event.preventDefault();
+
+        // Send data
+        $.post(
+            TARGET_POST_URL,
+            $("#questionare").serialize(),
+            function(response, status) {
+                console.log(response);
+            }
+        );
+    });
+</script>
+</body>
+</html>

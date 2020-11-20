@@ -1,0 +1,70 @@
+{
+    "questionnaire": [
+        {
+            "question": "Some super question 1?",
+            "type": "multiple_correct",
+            "options": [
+                {
+                    "option": "Some answer 1",
+                    "correct": true
+                },
+                {
+                    "option": "Some answer 2",
+                    "correct": false
+                },
+                {
+                    "option": "Some answer 3",
+                    "correct": true
+                },
+                {
+                    "option": "Some answer 4",
+                    "correct": false
+                }
+            ]
+        },
+        {
+            "question": "Some super question 2?",
+            "type": "multiple_correct",
+            "options": [
+                {
+                    "option": "Some answer 1",
+                    "correct": true
+                },
+                {
+                    "option": "Some answer 2",
+                    "correct": false
+                },
+                {
+                    "option": "Some answer 3",
+                    "correct": true
+                },
+                {
+                    "option": "Some answer 4",
+                    "correct": false
+                }
+            ]
+        },
+        {
+            "question": "Some super question 3?",
+            "type": "one_correct",
+            "options": [
+                {
+                    "option": "Some answer 1",
+                    "correct": false
+                },
+                {
+                    "option": "Some answer 2",
+                    "correct": false
+                },
+                {
+                    "option": "Some answer 3",
+                    "correct": true
+                },
+                {
+                    "option": "Some answer 4",
+                    "correct": false
+                }
+            ]
+        }
+    ]
+}
