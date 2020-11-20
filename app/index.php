@@ -2,6 +2,7 @@
 /* =================== MAIN CONFIGURATION ================================== */
 define("LINK_TO_JSON", "questions.json");  // Link to JSON file (or URL)
 define("ALLOW_ACCESS_CONTROL_ALLOW_ORIGIN", true); // Should be false in production
+define("FILE_PATH_TO_EXPORT", "results.csv"); // Path to file where information about user are exported
 /* ========================================================================= */
 
 if (ALLOW_ACCESS_CONTROL_ALLOW_ORIGIN) {
@@ -37,11 +38,7 @@ define("LAYOUT_STYLE", "margin: auto; width: 90%; max-width: 900px; font-family:
 
 /*
 TODO:
-0. All to config
-1. Styles (common + specific)
-1.a. Passing name/email as questions wrapper arg.
 2. Storing to file
-3. Body wrapper
 4. Sending to email.
 5. Generate description (legend)
 */
@@ -119,6 +116,24 @@ function render_layout_wrapper($page_content) {
     return '<html><body><div style="'.LAYOUT_STYLE.'">'.$page_content."</div></body></html>";
 }
 // ============================================================================
+
+function write_to_file($name_of_user, $address_of_user) {
+    /**Save information about user to file.
+    */
+    $myfile;
+    if (!file_exists(FILE_PATH_TO_EXPORT)) {
+        $myfile = fopen(FILE_PATH_TO_EXPORT, "w+") or die(json_encode(array("message" => "Unable to open file ".FILE_PATH_TO_EXPORT." in mode 'w+'!")));
+        fwrite($myfile, "USER_NAME,USER_EMAIL,TIME\n");
+    }
+    else {
+        $myfile = fopen(FILE_PATH_TO_EXPORT, "a") or die(json_encode(array("message" => "Unable to open file ".FILE_PATH_TO_EXPORT." in mode 'a'!")));
+    }
+    // Get current time
+    $time_now = time();
+    // Write result
+    fwrite($myfile, $name_of_user.",".$address_of_user.','.date("Y-m-dTH:i:s",$time_now)."\n");
+    fclose($myfile);
+}
 
 function get_list_of_post_keys($decoded_json) {
     /**Return list of all acceptable values in JSON for POST keys.
@@ -255,6 +270,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header('HTTP/1.1 400 Bad Request', false, 400);
         exit(json_encode(array("message" => "Wrong name format!")));
     }
+
+    // Save info about user to file
+    write_to_file($name_of_user, $address);
 
     // Return 200 if OK
     header('HTTP/1.1 200 OK', false, 200);
