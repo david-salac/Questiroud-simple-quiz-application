@@ -3,6 +3,7 @@
 define("LINK_TO_JSON", "questions.json");  // Link to JSON file (or URL)
 define("DEBUG_MODE", true); // For running locally only
 define("FILE_PATH_TO_EXPORT", "results.csv"); // Path to file where information about user are exported
+define("EMAIL_COPY_E_MAIL", false);  // Where to send copy of email (false for nowhere)
 /* ========================================================================= */
 
 /* ====================== EMAIL CONFIGURATION ============================== */
@@ -330,7 +331,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Save info about user to file (append if exist)
         write_to_file($name_of_user, $address);
         // Send email
-        send_mail_in_utf_8($address, prepare_result_message($json_decoded, $selected_values, $name_of_user, $address));
+        $email_body_text = prepare_result_message($json_decoded, $selected_values, $name_of_user, $address);
+        // Send email to user
+        send_mail_in_utf_8($address, $email_body_text);
+        if(EMAIL_COPY_E_MAIL) {
+            // Send email to requested copy receiver
+            send_mail_in_utf_8(EMAIL_COPY_E_MAIL, $email_body_text);
+        }
         // Return 200 if OK
         header('HTTP/1.1 200 OK', false, 200);
         exit(json_encode(array("message" => SUCCESS_MESSAGE)));
@@ -342,7 +349,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// In the case that nothing is post
+// In the case that nothing is post array
 header('HTTP/1.1 400 Bad Request', false, 400);
 exit(json_encode(array("message" => "No data!")));
 // ============================================================================
