@@ -14,12 +14,15 @@
     </style>
 </head>
 <body>
-<form id="questionare">
-    <input type="hidden" name="validation" id="validation">
-    <div id="questionare-quiz"></div>
-    <div id="questionare-quiz-wrong"></div>
-    <div id="questionare-contact"></div>
-    <div id="questionare-response"></div>
+<form id="questiroud"> <!-- Form for Questiroud's questionnaire -->
+    <input type="hidden" name="validation" id="validation"> <!-- Field for validation (is not send to proccessor) -->
+    <div id="questiroud-quiz"></div> <!-- Canvas for questionnaire -->
+    <div id="questiroud-quiz-wrong"></div> <!-- Canvas for error messages for questionnaire -->
+    <div id="questiroud-contact"></div> <!-- Canvas for filling contact information -->
+    <div id="questiroud-contact-wrong"></div> <!-- Canvas for error messages for contact -->
+    <div id="questiroud-waiting"></div> <!-- Canvas for waiting message (before receiving inputs) -->
+    <div id="questiroud-response"></div> <!-- Canvas for correct (non-error) response -->
+    <div id="questiroud-response-wrong"></div> <!-- Canvas for error response -->
 </form>
 <script>
     var JSON_URL = "http://localhost:5560/questions.php";
@@ -64,8 +67,8 @@
             question_classes += " " + CLASS_OPTIONAL_QUESTION;
         }
 
-        $('#questionare-quiz').append("<" + PAIR_TAG_FOR_QUESTION + " class=\"" + question_classes + "\">" + question['question'] + "</" + PAIR_TAG_FOR_QUESTION + ">");
-        $('#questionare-quiz').append(SEPARATOR_QUESTION_OPTIONS);
+        $('#questiroud-quiz').append("<" + PAIR_TAG_FOR_QUESTION + " class=\"" + question_classes + "\">" + question['question'] + "</" + PAIR_TAG_FOR_QUESTION + ">");
+        $('#questiroud-quiz').append(SEPARATOR_QUESTION_OPTIONS);
         // Append options
         var id_option = 'option_' + question_i;
 
@@ -77,19 +80,19 @@
 
             var input_type = "radio";
             if (question['type'] == "multiple_correct") {
-                $('#questionare-quiz').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" type="checkbox" name="' + id_and_value + '" value="' + id_and_value + '">');
+                $('#questiroud-quiz').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" type="checkbox" name="' + id_and_value + '" value="' + id_and_value + '">');
             }
             else if (question['type'] == "one_correct") {
-                $('#questionare-quiz').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" name="' + id_option + '" type="radio" value="' + id_and_value + '">');
+                $('#questiroud-quiz').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" name="' + id_option + '" type="radio" value="' + id_and_value + '">');
             }
 
-            $('#questionare-quiz').append('<label class="' + CLASS_FOR_LABEL + '" for="' + id_and_value + '">' + question['options'][opt_i]['option'] + '</label>');
-            $('#questionare-quiz').append(SEPARATOR_OPTIONS);
+            $('#questiroud-quiz').append('<label class="' + CLASS_FOR_LABEL + '" for="' + id_and_value + '">' + question['options'][opt_i]['option'] + '</label>');
+            $('#questiroud-quiz').append(SEPARATOR_OPTIONS);
         }
         if (!is_last) {
-            $('#questionare-quiz').append(SEPARATOR_QUESTIONS);
+            $('#questiroud-quiz').append(SEPARATOR_QUESTIONS);
         } else {
-            $('#questionare-quiz').append(SEPARATOR_QUESTIONS_SUBMIT);
+            $('#questiroud-quiz').append(SEPARATOR_QUESTIONS_SUBMIT);
         }
 
         // Create a list of required values
@@ -108,10 +111,13 @@
 
     function render_questionnaire(json) {
         // Manage content sequence
-        $("#questionare-quiz").show();
-        $("#questionare-quiz-wrong").hide();
-        $("#questionare-contact").hide();
-        $("#questionare-response").hide();
+        $("#questiroud-quiz").show();
+        $("#questiroud-quiz-wrong").hide();
+        $("#questiroud-contact").hide();
+        $("#questiroud-contact-wrong").hide();
+        $("#questiroud-response").hide();
+        $("#questiroud-waiting").hide();
+        $("#questiroud-response-wrong").hide();
 
         for (qu_i = 0; qu_i < json['questionnaire'].length; qu_i++) {
             var this_is_last = false;  // Indicate last question in series
@@ -120,7 +126,7 @@
             }
             add_question(json['questionnaire'][qu_i], qu_i, this_is_last);
         }
-        $('#questionare-quiz').append('<input class="' + NEXT_BUTTON_CLASS + '" type="submit" value="' + NEXT_BUTTON_TEXT + '">');
+        $('#questiroud-quiz').append('<input class="' + NEXT_BUTTON_CLASS + '" type="submit" value="' + NEXT_BUTTON_TEXT + '">');
     }
 
     function validate_questionnaire() {
@@ -155,66 +161,100 @@
 
     function render_contact() {
         // Manage content sequence
-        $("#questionare-quiz").hide();
-        $("#questionare-quiz-wrong").hide();
-        $("#questionare-contact").show();
-        $("#questionare-response").hide();
+        $("#questiroud-quiz").hide();
+        $("#questiroud-quiz-wrong").hide();
+        $("#questiroud-contact").show();
+        $("#questiroud-contact-wrong").hide();
+        $("#questiroud-response").hide();
+        $("#questiroud-waiting").hide();
+        $("#questiroud-response-wrong").hide();
 
-        $("#questionare-contact").append(CODE_ABOVE_NAME_INPUT);
-        $("#questionare-contact").append('<input type="text" id="name_of_user" name="name_of_user" class="' + CLASS_NAME_INPUT + '" placeholder="' + PLACEHOLDER_NAME + '" required>');
-        $("#questionare-contact").append(CODE_BELOW_NAME_INPUT);
+        $("#questiroud-contact").append(CODE_ABOVE_NAME_INPUT);
+        $("#questiroud-contact").append('<input type="text" id="name_of_user" name="name_of_user" class="' + CLASS_NAME_INPUT + '" placeholder="' + PLACEHOLDER_NAME + '" required>');
+        $("#questiroud-contact").append(CODE_BELOW_NAME_INPUT);
 
-        $("#questionare-contact").append(CODE_ABOVE_EMAIL_INPUT);
-        $("#questionare-contact").append('<input type="email" id="address_of_user" name="address_of_user" class="' + CLASS_EMAIL_INPUT + '" placeholder="' + PLACEHOLDER_EMAIL + '" required>');
-        $("#questionare-contact").append(CODE_BELOW_EMAIL_INPUT);
-        $('#questionare-contact').append('<input class="' + SUBMIT_BUTTON_CLASS + '" type="submit" value="' + SUBMIT_BUTTON_TEXT + '">');
+        $("#questiroud-contact").append(CODE_ABOVE_EMAIL_INPUT);
+        $("#questiroud-contact").append('<input type="email" id="address_of_user" name="address_of_user" class="' + CLASS_EMAIL_INPUT + '" placeholder="' + PLACEHOLDER_EMAIL + '" required>');
+        $("#questiroud-contact").append(CODE_BELOW_EMAIL_INPUT);
+        $('#questiroud-contact').append('<input class="' + SUBMIT_BUTTON_CLASS + '" type="submit" value="' + SUBMIT_BUTTON_TEXT + '">');
     }
 
-    function render_response(response_message) {
+    function render_response_correct(response_message) {
         // Manage content sequence
-        $("#questionare-quiz").hide();
-        $("#questionare-quiz-wrong").hide();
-        $("#questionare-contact").hide();
-        $("#questionare-response").show();
+        $("#questiroud-quiz").hide();
+        $("#questiroud-quiz-wrong").hide();
+        $("#questiroud-contact").hide();
+        $("#questiroud-contact-wrong").hide();
+        $("#questiroud-response").show();
+        $("#questiroud-waiting").hide();
+        $("#questiroud-response-wrong").hide();
+        // Render content of response
+        $("#questiroud-response").html(response_message);
+    }
 
-        $("#questionare-response").html(response_message);
+    function render_response_wrong(response_message) {
+        // Manage content sequence
+        $("#questiroud-quiz").hide();
+        $("#questiroud-quiz-wrong").hide();
+        $("#questiroud-contact").hide();
+        $("#questiroud-contact-wrong").hide();
+        $("#questiroud-response").hide();
+        $("#questiroud-waiting").hide();
+        $("#questiroud-response-wrong").show();
+        // Render content of response
+        $("#questiroud-response-wrong").html(response_message);
+    }
+
+    function render_waiting_for_response() {
+        // Manage content sequence
+        $("#questiroud-quiz").hide();
+        $("#questiroud-quiz-wrong").hide();
+        $("#questiroud-contact").hide();
+        $("#questiroud-contact-wrong").hide();
+        $("#questiroud-response").hide();
+        $("#questiroud-waiting").show();
+        $("#questiroud-response-wrong").hide();
+        // Render content of response
+        $("#questiroud-waiting").html(SENDING_STATUS);
     }
 
     $( document ).ready(function() {
         $.getJSON(JSON_URL, function(json) {
-            $("#questionare-quiz-wrong").html(NOT_ALL_REQUIRED_QUESTIONS_ANSWERED);
+            $("#questiroud-quiz-wrong").html(NOT_ALL_REQUIRED_QUESTIONS_ANSWERED);
 
             render_questionnaire(json);
         });
     });
-    $("#questionare").submit(function( event ) {
+    $("#questiroud").submit(function( event ) {
         event.preventDefault();
-        if($("#questionare-contact").is(":hidden") && $("#questionare-response").is(":hidden")){
+        if($("#questiroud-contact").is(":hidden") && $("#questiroud-response").is(":hidden")){
             if (validate_questionnaire()) {
                 // Second step, show contact
                 render_contact();
             } else {
-                $("#questionare-quiz-wrong").show();
+                $("#questiroud-quiz-wrong").show();
             }
         }
-        else if($("#questionare-quiz").is(":hidden") && $("#questionare-response").is(":hidden")){
-            // Third step, show contact
-            $("#questionare-quiz").hide();
-            $("#questionare-quiz-wrong").hide();
-            $("#questionare-contact").hide();
-            $("#questionare-response").show();
-            $("#questionare-response").html(SENDING_STATUS);
+        else if($("#questiroud-quiz").is(":hidden") && $("#questiroud-response").is(":hidden")){
+            // Render waiting for response from server message
+            render_waiting_for_response();
 
-            // Remove validation field
+            // Remove validation field (no reason to send it to server)
             $("#validation").remove();
 
+            // Send data to server
             $.post(
                 TARGET_POST_URL,
-                $("#questionare").serialize(),
+                $("#questiroud").serialize(),
                 function(response, status) {
-                    render_response(response['message']);
-                }
-            );
+                    // Render correct response (message)
+                    render_response_correct(response['message']);
+                }).fail(
+                    function(response) {
+                        // Show error message
+                        render_response_wrong(response.responseJSON['message']);
+                    }
+                )
         }
     });
 </script>

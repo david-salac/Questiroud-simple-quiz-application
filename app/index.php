@@ -5,10 +5,12 @@ define("DEBUG_MODE", true); // For running locally only
 define("FILE_PATH_TO_EXPORT", "results.csv"); // Path to file where information about user are exported
 /* ========================================================================= */
 
-if (DEBUG_MODE) {
-    header('Access-Control-Allow-Origin: *', false);
-}
-header('Content-type: application/json; charset=utf-8', false);
+/* ====================== EMAIL CONFIGURATION ============================== */
+define("EMAIL_SUBJECT", "Evaluation of questionnaire");  // Subject of the email that is send
+define("EMAIL_FROM_NAME", "John Doe");  // From who (name) it comes
+define("EMAIL_FROM_E_MAIL", "info@example.com");  // From who (e-mail) it comes
+define("EMAIL_REPLY_E_MAIL", "info@example.com");  // To what email reply
+/* ========================================================================= */
 
 /* ====================== CONTENT DEFINITION =============================== */
 define("ADDRESSING_PREFIX", "Dear ");
@@ -20,7 +22,6 @@ define("TOTAL_SCORE_PREFIX", "Total score: ");
 define("TOTAL_SCORE_SUFFIX", " percent.");
 define("SUCCESS_MESSAGE", " Email sent!");
 /* ========================================================================= */
-
 
 /* ========================= CSS STYLES FOR ELEMENTS ======================= */
 define("QUESTION_STYLE", "margin: 0;");
@@ -36,12 +37,15 @@ define("CONTENT_WRAPPER_STYLE", "background: #ffffff; padding: 20px; box-sizing:
 define("LAYOUT_STYLE", "margin: auto; width: 90%; max-width: 900px; font-family: sans-serif;");
 /* ========================================================================= */
 
-/*
-TODO:
-2. Storing to file
-4. Sending to email.
-5. Generate description (legend)
-*/
+/* ===================== SETTING HEADERS =================================== */
+if (DEBUG_MODE) {
+    // To make localhost available (when running from docker)
+    header('Access-Control-Allow-Origin: *', false);
+}
+// All as JSON
+header('Content-type: application/json; charset=utf-8', false);
+/* ========================================================================= */
+
 
 // =================== RENDER FRACTION OF CODE FOR RESPONSE ===================
 function render_html_question($question_text, $order) {
@@ -117,8 +121,16 @@ function render_layout_wrapper($page_content) {
 }
 // ============================================================================
 
+/* ============ FUNCTIONALITY FOR WRITING TO FILE ========================== */
+function file_open_error() {
+    /**Return error message with correct status code if cannot open file.*/
+    header('HTTP/1.1 500 Internal Server Error', false, 500);
+    return json_encode(array("message" => "Cannot open file!"));
+}
 function write_to_file($name_of_user, $address_of_user) {
     /**Save information about user to file.
+    @param name_of_user: name that user mentioned.
+    @param address_of_user: e-mail address of user.
     */
     // Clean saved fields
     // 1) No ',' symbol
@@ -128,24 +140,44 @@ function write_to_file($name_of_user, $address_of_user) {
     $save_name = str_replace("\n", " ", $save_name);
     $save_email = str_replace("\n", " ", $save_email);
 
-    $myfile;
+    $csv_file;
     if (!file_exists(FILE_PATH_TO_EXPORT)) {
-        $myfile = fopen(FILE_PATH_TO_EXPORT, "w+") or die(json_encode(array("message" => "Unable to open file ".FILE_PATH_TO_EXPORT." in mode 'w+'!")));
-        fwrite($myfile, "USER_NAME,USER_EMAIL,TIME\n");
+        $csv_file = fopen(FILE_PATH_TO_EXPORT, "w+") or die(file_open_error());
+        fwrite($csv_file, "USER_NAME,USER_EMAIL,TIME\n");
     }
     else {
-        $myfile = fopen(FILE_PATH_TO_EXPORT, "a") or die(json_encode(array("message" => "Unable to open file ".FILE_PATH_TO_EXPORT." in mode 'a'!")));
+        $csv_file = fopen(FILE_PATH_TO_EXPORT, "a") or die(file_open_error());
     }
     // Get current time
     $time_now = time();
     // Write result
-    fwrite($myfile, $save_name.",".$save_email.','.date("Y-m-dTH:i:s",$time_now)."\n");
-    fclose($myfile);
+    fwrite($csv_file, $save_name.",".$save_email.','.date("Y-m-dTH:i:s",$time_now)."\n");
+    fclose($csv_file);
 }
+// ============================================================================
 
+/* ================= FUNCTIONALITY FOR SENDING EMAIL ======================= */
+function send_mail_in_utf_8($email_to, $email_body) {
+    /**Send email in UTF-8 encoding.
+    @param email_to: email address of receiver - to whom you send it.
+    @param email_body: body of email (actual text/code).
+    */
+    $email_subject= "=?utf-8?b?".base64_encode(EMAIL_SUBJECT)."?=";
+    $headers = "MIME-Version: 1.0\r\n";
+    $headers.= "From: =?utf-8?b?".base64_encode(EMAIL_FROM_NAME)."?= <".EMAIL_FROM_E_MAIL.">\r\n";
+    $headers.= "Content-Type: text/html;charset=utf-8\r\n";
+    $headers.= "Reply-To: ".EMAIL_REPLY_E_MAIL."\r\n";
+    $headers.= "X-Mailer: PHP/" . phpversion();
+    mail($email_to, $email_subject, $email_body, $headers);
+}
+// ============================================================================
+
+/* ========== PART FOR EVALUATION AND CONTENT PREPARATION ================== */
 function get_list_of_post_keys($decoded_json) {
-    /**Return list of all acceptable values in JSON for POST keys.
+    /**Return list of all acceptable values in JSON for POST keys related
+        to questionnaire answers.
     @param decoded_json: JSON dataclass with all questions and answers.
+    @return: list of all answers.
     */
     $list_of_options = array();
     $question_order = 0;
@@ -223,8 +255,23 @@ function prepare_result_message($decoded_json, $selected_values, $name_of_user, 
     // Return whole HTML code
     return $whole_layout;
 }
+// ============================================================================
 
-
+/* ================== REST-ful HANDLING OF REQUEST ========================= */
+function security_validation($value) {
+    /**Validate if the value does not contain un-secure characters.
+    @param $value: string value to be checked.
+    @return: true if all is good; false if there is an error.
+    */
+    if (strip_tags($value) != $value) {  // Not HTML tags
+        return false;
+    } if (false !== strpos($value, '"')) {  // No " character
+        return false;
+    } if (false !== strpos($value, "'")) {  // No ' character
+        return false;
+    }
+    return true;
+}
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Process the request.
 
@@ -256,7 +303,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             array_push($selected_values, $value);
         }
       }
-      if (strip_tags($value) != $value) {
+      if (!security_validation($value)) {
         header('HTTP/1.1 400 Bad Request', false, 400);
         exit(json_encode(array("message" => "Wrong post values!")));
       }
@@ -282,6 +329,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!DEBUG_MODE) {
         // Save info about user to file (append if exist)
         write_to_file($name_of_user, $address);
+        // Send email
+        send_mail_in_utf_8($address, prepare_result_message($json_decoded, $selected_values, $name_of_user, $address));
         // Return 200 if OK
         header('HTTP/1.1 200 OK', false, 200);
         exit(json_encode(array("message" => SUCCESS_MESSAGE)));
@@ -292,3 +341,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit(json_encode(array("message" => prepare_result_message($json_decoded, $selected_values, $name_of_user, $address))));
     }
 }
+
+// In the case that nothing is post
+header('HTTP/1.1 400 Bad Request', false, 400);
+exit(json_encode(array("message" => "No data!")));
+// ============================================================================

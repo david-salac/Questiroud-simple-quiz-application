@@ -24,7 +24,7 @@
             ]
         },
         {
-            "question": "Some super question 2?",
+            "question": "Some super question 2, Unicode: ěščřžýáíéúů?",
             "type": "multiple_correct",
             "required": false,
             "options": [
