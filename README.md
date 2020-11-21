@@ -12,7 +12,7 @@ cd docker
 # Build Docker images of PHP that can run the Questiroud
 docker build -t questiroud .
 cd ..
-# Bind the dictionary /app with the folder that contains PHP code in Docker => makes development faster
+# Bind the /app folder with the PHP application folder in Docker => makes development faster
 docker run -d -it -p 5560:80 --mount 'type=bind,src='$(pwd)'/app,dst=/var/www/site' questiroud
 ```
 The starting folder has to be the application folder.
