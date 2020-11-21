@@ -1,12 +1,12 @@
 {
     "questionnaire": [
         {
-            "question": "Some super question 1?",
+            "question": "Some super question 1 super extra long question that reaches multiple lines to test if all works correctly?",
             "type": "multiple_correct",
             "required": true,
             "options": [
                 {
-                    "option": "Some answer 1",
+                    "option": "Some answer 1 which is super extra ultra long because it also has to be tested here.",
                     "correct": true
                 },
                 {
@@ -48,6 +48,29 @@
         },
         {
             "question": "Some super question 3?",
+            "type": "one_correct",
+            "required": true,
+            "options": [
+                {
+                    "option": "Some answer 1",
+                    "correct": false
+                },
+                {
+                    "option": "Some answer 2",
+                    "correct": false
+                },
+                {
+                    "option": "Some answer 3",
+                    "correct": true
+                },
+                {
+                    "option": "Some answer 4",
+                    "correct": false
+                }
+            ]
+        },
+        {
+            "question": "Some super question 4?",
             "type": "one_correct",
             "required": true,
             "options": [

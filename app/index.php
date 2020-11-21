@@ -2,6 +2,7 @@
 /* =================== MAIN CONFIGURATION ================================== */
 define("LINK_TO_JSON", "questions.json");  // Link to JSON file (or URL)
 define("DEBUG_MODE", true); // For running locally only
+define("ALLOW_SAME_ORIGIN", true); // Add header 'Access-Control-Allow-Origin: *'
 define("FILE_PATH_TO_EXPORT", "results.csv"); // Path to file where information about user are exported
 define("EMAIL_COPY_E_MAIL", false);  // Where to send copy of email (false for nowhere)
 /* ========================================================================= */
@@ -18,28 +19,28 @@ define("ADDRESSING_PREFIX", "Dear ");
 define("ADDRESSING_SUFFIX", ",<p>Here is the certificate from our quiz.</p>");
 define("CONTENT_SUFFIX", "<p>End of the content.</p>");
 define("QUESTION_SCORE_PREFIX", "Score for question: ");
-define("QUESTION_SCORE_SUFFIX", ".");
+define("QUESTION_SCORE_SUFFIX", " point.");
 define("TOTAL_SCORE_PREFIX", "Total score: ");
 define("TOTAL_SCORE_SUFFIX", " percent.");
-define("SUCCESS_MESSAGE", " Email sent!");
+define("SUCCESS_MESSAGE", "Your questionnaire has been evaluated, please check your email!");
 /* ========================================================================= */
 
 /* ========================= CSS STYLES FOR ELEMENTS ======================= */
-define("QUESTION_STYLE", "margin: 0;");
+define("QUESTION_STYLE", "margin: 0 0 5px 0; font-size: 110%;");
 define("OPTION_CORRECT_STYLE", "background: #00C521; padding: 15px; box-sizing: border-box;");
 define("OPTION_INCORRECT_STYLE", "background: #FEA4A4; padding: 15px; box-sizing: border-box;");
 define("OPTION_CORRECT_UNSELECTED_STYLE", "background: #B4F0BE; padding: 15px; box-sizing: border-box;");
 define("OPTION_OTHER_STYLE", "background: #dedede; padding: 15px; box-sizing: border-box;");
 define("QUESTION_WRAPPER_STYLE", "background: #F5F5F5; padding: 15px 20px 15px 20px; box-sizing: border-box; margin-bottom: 20px;");
-define("QUESTION_SCORE_STYLE", "margin-bottom: 0; padding-bottom: 0;");
-define("ALL_QUESTIONS_WRAPPER_STYLE", "padding: 15px; box-sizing: border-box; border: 1px solid #EAEAEA; border-radius: 5px; margin-top: 15px");
+define("QUESTION_SCORE_STYLE", "margin-bottom: 0; margin-top: 10px; padding-bottom: 0;");
+define("ALL_QUESTIONS_WRAPPER_STYLE", "padding: 15px; box-sizing: border-box; border: 1px solid #EAEAEA; border-radius: 5px; margin-top: 15px; margin-bottom: 15px");
 define("TOTAL_SCORE_STYLE", "margin: 0;");
 define("CONTENT_WRAPPER_STYLE", "background: #ffffff; padding: 20px; box-sizing: border-box;");
 define("LAYOUT_STYLE", "margin: auto; width: 90%; max-width: 900px; font-family: sans-serif;");
 /* ========================================================================= */
 
 /* ===================== SETTING HEADERS =================================== */
-if (DEBUG_MODE) {
+if (ALLOW_SAME_ORIGIN) {
     // To make localhost available (when running from docker)
     header('Access-Control-Allow-Origin: *', false);
 }

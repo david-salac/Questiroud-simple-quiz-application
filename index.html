@@ -5,60 +5,72 @@
     <title>Simple questionnaire</title>
     <script src="jquery-3.5.1.min.js"></script>
     <style>
-        .optional_question {
-            font-style: italic;
-        }
-        .required_question {
-            font-weight: bold;
+        body {
+            width: 90%;
+            max-width: 1024px;
+            margin: 30px auto 30px auto;
+            font-family: sans-serif;
         }
     </style>
+    <link rel="stylesheet" href="questiroud.css">
 </head>
 <body>
 <form id="questiroud"> <!-- Form for Questiroud's questionnaire -->
     <input type="hidden" name="validation" id="validation"> <!-- Field for validation (is not send to proccessor) -->
-    <div id="questiroud-quiz"></div> <!-- Canvas for questionnaire -->
     <div id="questiroud-quiz-wrong"></div> <!-- Canvas for error messages for questionnaire -->
-    <div id="questiroud-contact"></div> <!-- Canvas for filling contact information -->
+    <div id="questiroud-quiz"></div> <!-- Canvas for questionnaire -->
     <div id="questiroud-contact-wrong"></div> <!-- Canvas for error messages for contact -->
+    <div id="questiroud-contact"></div> <!-- Canvas for filling contact information -->
     <div id="questiroud-waiting"></div> <!-- Canvas for waiting message (before receiving inputs) -->
     <div id="questiroud-response"></div> <!-- Canvas for correct (non-error) response -->
     <div id="questiroud-response-wrong"></div> <!-- Canvas for error response -->
 </form>
 <script>
+    // Code configuration
     var JSON_URL = "http://localhost:5560/questions.php";
     var TARGET_POST_URL = "http://localhost:5560/";
-    var NEXT_BUTTON_TEXT = "Next";
-    var NEXT_BUTTON_CLASS = "next_button";
+
+    // Text parts
+    var NEXT_BUTTON_TEXT = "NEXT";
     var SUBMIT_BUTTON_TEXT = "SUBMIT";
-    var SUBMIT_BUTTON_CLASS = "submit_button";
-    var PAIR_TAG_FOR_QUESTION = "span";
-    var CLASS_FOR_QUESTION = "some_question";
-    var SEPARATOR_QUESTION_OPTIONS = "<br>";
-    var SEPARATOR_QUESTIONS = "<br><br>";
-    var SEPARATOR_QUESTIONS_SUBMIT = "<br>";
-    var CLASS_FOR_OPTION_INPUT = "some_option";
-    var SEPARATOR_OPTIONS = " ";
-    var CLASS_FOR_LABEL = "some_label";
-    var CLASS_OPTIONAL_QUESTION = "optional_question";
-    var CLASS_REQUIRED_QUESTION = "required_question";
-
-    var CODE_ABOVE_EMAIL_INPUT = "";
-    var CLASS_EMAIL_INPUT = "user_email";
     var PLACEHOLDER_EMAIL = "Your email";
-    var CODE_BELOW_EMAIL_INPUT = "<br>";
-
-    var CODE_ABOVE_NAME_INPUT = "";
-    var CLASS_NAME_INPUT = "user_name";
     var PLACEHOLDER_NAME = "Your name";
-    var CODE_BELOW_NAME_INPUT = "<br>";
+    var SENDING_STATUS = "We are processing your request, please wait!";
+    var ERROR_MESSAGE_FOR_QUOTATION_MARKS_IN_NAME = "Your name and email must not contain quotation marks character.";
+    var NOT_ALL_REQUIRED_QUESTIONS_ANSWERED = "You have to answer all required questions!";
 
-    var SENDING_STATUS = "Sending, wait!";
+    // CSS classes
+    var CLASS_NEXT_BUTTON = "questiroud_next_button";
+    var CLASS_QUESTION_WRAPPER = "questiroud_single_question";
+    var CLASS_SUBMIT_BUTTON = "questiroud_submit_button";
+    var CLASS_FOR_QUESTION = "questiroud_question_header";
+    var CLASS_FOR_OPTION_INPUT = "questiroud_some_option";
+    var CLASS_FOR_LABEL = "questiroud_some_label";
+    var CLASS_OPTIONAL_QUESTION = "questiroud_optional_question";
+    var CLASS_REQUIRED_QUESTION = "questiroud_required_question";
+    var CLASS_EMAIL_INPUT = "questiroud_user_email";
+    var CLASS_NAME_INPUT = "questiroud_user_name";
 
-    // Error message content
-    var NOT_ALL_REQUIRED_QUESTIONS_ANSWERED = "You have to answer all required questions";
+    // Included parts of code
+    var TAG_FOR_QUESTION = "span";
+    var TAG_QUESTION_WRAPPER = "div";
+    var CODE_BELOW_EMAIL_INPUT = "";
+    var CODE_ABOVE_EMAIL_INPUT = "";
+    var CODE_ABOVE_NAME_INPUT = "";
+    var CODE_BELOW_NAME_INPUT = "";
+    var SEPARATOR_QUESTION_OPTIONS = '<div class="questiroud-clear"></div>';
+    var SEPARATOR_QUESTIONS = "";
+    var SEPARATOR_QUESTIONS_SUBMIT = "";
+    var SEPARATOR_OPTIONS = "";
 
     function add_question(question, question_i, is_last) {
-        // Append answer
+        /**Append question (with all options)
+        @param question: dictionary containing info aboug question (+ answers).
+        @param question_i: Relative position of question among other (integer > 0).
+        @param is_last: if true, the question is last in the series, false otherwise.
+        @return: HTML code with one question and its wrapper
+        */
+
         var question_classes = CLASS_FOR_QUESTION
         if (question['required']) {
             question_classes += " " + CLASS_REQUIRED_QUESTION;
@@ -66,9 +78,11 @@
         else {
             question_classes += " " + CLASS_OPTIONAL_QUESTION;
         }
+        // Variable containing whole HTML code for question.
+        var questiroud_question = ("<" + TAG_QUESTION_WRAPPER + " class=\"" + CLASS_QUESTION_WRAPPER + "\"/>");
 
-        $('#questiroud-quiz').append("<" + PAIR_TAG_FOR_QUESTION + " class=\"" + question_classes + "\">" + question['question'] + "</" + PAIR_TAG_FOR_QUESTION + ">");
-        $('#questiroud-quiz').append(SEPARATOR_QUESTION_OPTIONS);
+        questiroud_question += "<" + TAG_FOR_QUESTION + " class=\"" + question_classes + "\">" + (question_i + 1) + ") " + question['question'] + "</" + TAG_FOR_QUESTION + ">";
+        questiroud_question += SEPARATOR_QUESTION_OPTIONS;
         // Append options
         var id_option = 'option_' + question_i;
 
@@ -80,19 +94,19 @@
 
             var input_type = "radio";
             if (question['type'] == "multiple_correct") {
-                $('#questiroud-quiz').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" type="checkbox" name="' + id_and_value + '" value="' + id_and_value + '">');
+                questiroud_question += '<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" type="checkbox" name="' + id_and_value + '" value="' + id_and_value + '">';
             }
             else if (question['type'] == "one_correct") {
-                $('#questiroud-quiz').append('<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" name="' + id_option + '" type="radio" value="' + id_and_value + '">');
+                questiroud_question += '<input class="' + CLASS_FOR_OPTION_INPUT + '" id="' + id_and_value + '" name="' + id_option + '" type="radio" value="' + id_and_value + '">';
             }
 
-            $('#questiroud-quiz').append('<label class="' + CLASS_FOR_LABEL + '" for="' + id_and_value + '">' + question['options'][opt_i]['option'] + '</label>');
-            $('#questiroud-quiz').append(SEPARATOR_OPTIONS);
+            questiroud_question += '<label class="' + CLASS_FOR_LABEL + '" for="' + id_and_value + '">' + question['options'][opt_i]['option'] + '</label>';
+            questiroud_question += SEPARATOR_OPTIONS;
         }
         if (!is_last) {
-            $('#questiroud-quiz').append(SEPARATOR_QUESTIONS);
+            questiroud_question += SEPARATOR_QUESTIONS;
         } else {
-            $('#questiroud-quiz').append(SEPARATOR_QUESTIONS_SUBMIT);
+            questiroud_question += SEPARATOR_QUESTIONS_SUBMIT;
         }
 
         // Create a list of required values
@@ -107,6 +121,10 @@
         else {
             $("#validation").val(prefix_validation + "");
         }
+
+        // End question wrapper tag.
+        questiroud_question += "</" + TAG_QUESTION_WRAPPER + ">"
+        $('#questiroud-quiz').append(questiroud_question);
     }
 
     function render_questionnaire(json) {
@@ -126,7 +144,7 @@
             }
             add_question(json['questionnaire'][qu_i], qu_i, this_is_last);
         }
-        $('#questiroud-quiz').append('<input class="' + NEXT_BUTTON_CLASS + '" type="submit" value="' + NEXT_BUTTON_TEXT + '">');
+        $('#questiroud-quiz').append('<input class="' + CLASS_NEXT_BUTTON + '" type="submit" value="' + NEXT_BUTTON_TEXT + '">');
     }
 
     function validate_questionnaire() {
@@ -176,7 +194,7 @@
         $("#questiroud-contact").append(CODE_ABOVE_EMAIL_INPUT);
         $("#questiroud-contact").append('<input type="email" id="address_of_user" name="address_of_user" class="' + CLASS_EMAIL_INPUT + '" placeholder="' + PLACEHOLDER_EMAIL + '" required>');
         $("#questiroud-contact").append(CODE_BELOW_EMAIL_INPUT);
-        $('#questiroud-contact').append('<input class="' + SUBMIT_BUTTON_CLASS + '" type="submit" value="' + SUBMIT_BUTTON_TEXT + '">');
+        $('#questiroud-contact').append('<input class="' + CLASS_SUBMIT_BUTTON + '" type="submit" value="' + SUBMIT_BUTTON_TEXT + '">');
     }
 
     function render_response_correct(response_message) {
@@ -218,10 +236,29 @@
         $("#questiroud-waiting").html(SENDING_STATUS);
     }
 
+    function validate_email_name() {
+        /*Check if there are no quotation marks in email or name*/
+        if (String($("#address_of_user").val()).indexOf("'") != -1 || String($("#address_of_user").val()).indexOf('"') != -1) {
+            return false;
+        }
+        if (String($("#name_of_user").val()).indexOf("'") != -1 || String($("#name_of_user").val()).indexOf('"') != -1) {
+            return false;
+        }
+        return true;
+    }
+
+    function render_contact_wrong() {
+        // Manage content sequence
+        $("#questiroud-contact-wrong").show();
+        // Render content of response
+        $("#questiroud-contact-wrong").html(ERROR_MESSAGE_FOR_QUOTATION_MARKS_IN_NAME);
+        $('html, body').animate({
+            scrollTop: $("#questiroud-contact-wrong").offset().top
+        }, 1000);
+    }
+
     $( document ).ready(function() {
         $.getJSON(JSON_URL, function(json) {
-            $("#questiroud-quiz-wrong").html(NOT_ALL_REQUIRED_QUESTIONS_ANSWERED);
-
             render_questionnaire(json);
         });
     });
@@ -232,29 +269,37 @@
                 // Second step, show contact
                 render_contact();
             } else {
+                $("#questiroud-quiz-wrong").html(NOT_ALL_REQUIRED_QUESTIONS_ANSWERED);
                 $("#questiroud-quiz-wrong").show();
+                $('html, body').animate({
+                    scrollTop: $("#questiroud-quiz-wrong").offset().top
+                }, 1000);
             }
         }
         else if($("#questiroud-quiz").is(":hidden") && $("#questiroud-response").is(":hidden")){
-            // Render waiting for response from server message
-            render_waiting_for_response();
+            if (!validate_email_name()) {
+                render_contact_wrong();
+            } else {
+                // Render waiting for response from server message
+                render_waiting_for_response();
 
-            // Remove validation field (no reason to send it to server)
-            $("#validation").remove();
+                // Remove validation field (no reason to send it to server)
+                $("#validation").remove();
 
-            // Send data to server
-            $.post(
-                TARGET_POST_URL,
-                $("#questiroud").serialize(),
-                function(response, status) {
-                    // Render correct response (message)
-                    render_response_correct(response['message']);
-                }).fail(
-                    function(response) {
-                        // Show error message
-                        render_response_wrong(response.responseJSON['message']);
-                    }
-                )
+                // Send data to server
+                $.post(
+                    TARGET_POST_URL,
+                    $("#questiroud").serialize(),
+                    function(response, status) {
+                        // Render correct response (message)
+                        render_response_correct(response['message']);
+                    }).fail(
+                        function(response) {
+                            // Show error message
+                            render_response_wrong(response.responseJSON['message']);
+                        }
+                    )
+            }
         }
     });
 </script>
