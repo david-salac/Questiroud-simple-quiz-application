@@ -1,7 +1,7 @@
 <?php
 /* =================== MAIN CONFIGURATION ================================== */
 define("LINK_TO_JSON", "questions.json");  // Link to JSON file (or URL)
-define("DEBUG_MODE", true); // For running locally only (does not generate email and file, just print email body in response)
+define("DEBUG_MODE", false); // For running locally only (does not generate email and file, just print email body in response)
 define("ALLOW_SAME_ORIGIN", true); // Add the header 'Access-Control-Allow-Origin: *'
 define("FILE_PATH_TO_EXPORT", "results.csv"); // Path to file where information about user are exported
 define("EMAIL_COPY_E_MAIL", false);  // Where to send copy of email (false for nowhere)
@@ -129,10 +129,11 @@ function file_open_error() {
     header('HTTP/1.1 500 Internal Server Error', false, 500);
     return json_encode(array("message" => "Cannot open file!"));
 }
-function write_to_file($name_of_user, $address_of_user) {
+function write_to_file($name_of_user, $address_of_user, $total_score) {
     /**Save information about user to file.
     @param name_of_user: name that user mentioned.
     @param address_of_user: e-mail address of user.
+    @param total_score: total achieved score.
     */
     // Clean saved fields
     // 1) No ',' symbol
@@ -142,10 +143,12 @@ function write_to_file($name_of_user, $address_of_user) {
     $save_name = str_replace("\n", " ", $save_name);
     $save_email = str_replace("\n", " ", $save_email);
 
+    $total_score_string = number_format(100 * $total_score, 2);
+
     $csv_file;
     if (!file_exists(FILE_PATH_TO_EXPORT)) {
         $csv_file = fopen(FILE_PATH_TO_EXPORT, "w+") or die(file_open_error());
-        fwrite($csv_file, "USER_NAME,USER_EMAIL,TIME\n");
+        fwrite($csv_file, "USER_NAME,USER_EMAIL,TIME,TOTAL_SCORE_PERCENT\n");
     }
     else {
         $csv_file = fopen(FILE_PATH_TO_EXPORT, "a") or die(file_open_error());
@@ -153,7 +156,7 @@ function write_to_file($name_of_user, $address_of_user) {
     // Get current time
     $time_now = time();
     // Write result
-    fwrite($csv_file, $save_name.",".$save_email.','.date("Y-m-dTH:i:s",$time_now)."\n");
+    fwrite($csv_file, $save_name.",".$save_email.','.date("Y-m-dTH:i:s",$time_now).','.$total_score_string."\n");
     fclose($csv_file);
 }
 // ============================================================================
@@ -200,7 +203,7 @@ function prepare_result_message($decoded_json, $selected_values, $name_of_user, 
     /**Prepare the HTML email response.
     @param decoded_json: JSON dataclass with all questions and answers.
     @param selected_values: Options selected by user.
-    @return: HTML code of response
+    @return: array of 1) HTML code of response, 2) total score
     */
     $questions_code = "";
     $total_score = 0;
@@ -256,7 +259,7 @@ function prepare_result_message($decoded_json, $selected_values, $name_of_user, 
     $whole_layout = render_layout_wrapper($page_body);
 
     // Return whole HTML code
-    return $whole_layout;
+    return array($whole_layout, $total_score / $question_order);
 }
 // ============================================================================
 
@@ -330,10 +333,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (!DEBUG_MODE) {
-        // Save info about user to file (append if exist)
-        write_to_file($name_of_user, $address);
         // Send email
-        $email_body_text = prepare_result_message($json_decoded, $selected_values, $name_of_user, $address);
+        $score_plus_email = prepare_result_message($json_decoded, $selected_values, $name_of_user, $address);
+        $email_body_text = $score_plus_email[0];
+        $total_achieved_score = $score_plus_email[1];
+        // Save info about user to file (append if exist)
+        write_to_file($name_of_user, $address, $total_achieved_score);
         // Send email to user
         send_mail_in_utf_8($address, $email_body_text);
         if(EMAIL_COPY_E_MAIL) {
@@ -347,7 +352,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // DEBUG (local) mode
         header('HTTP/1.1 200 OK', false, 200);
         // Return the content of the mail in response
-        exit(json_encode(array("message" => prepare_result_message($json_decoded, $selected_values, $name_of_user, $address))));
+        exit(json_encode(array("message" => prepare_result_message($json_decoded, $selected_values, $name_of_user, $address)[0])));
     }
 }
 
