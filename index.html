@@ -11,6 +11,16 @@
             margin: 30px auto 30px auto;
             font-family: sans-serif;
         }
+        .logo {
+            width: 90%;
+            max-width: 1127px;
+            height: auto;
+            margin: 20px auto 20px auto;
+            display: block;
+        }
+        .clear {
+            clear: both;
+        }
     </style>
     <!-- ============ INSERT THIS CODE TO HAVE CSS STYLE ================== -->
     <link rel="stylesheet" href="questiroud.css">
@@ -18,9 +28,13 @@
 </head>
 <body>
 
-    <!-- INSERT THIS CODE TO BODY ON THE PLACE WHERE QUESTIONNARE SHOULD BE GENERATED -->
+    <img src="demo_files/logo.png" alt="Questiroud" class="logo">
+    <p>Questiround is the application for generation of questionnaires, implementing both front-end and back-end parts with an evaluation of answers send on an email.</p>
+    <div class="clear"></div>
+
+    <!-- INSERT THIS CODE TO BODY ON THE PLACE WHERE QUESTIONNAIRE SHOULD BE GENERATED -->
     <form id="questiroud"> <!-- Form for Questiroud's questionnaire -->
-        <input type="hidden" name="validation" id="validation"> <!-- Field for validation (is not send to proccessor) -->
+        <input type="hidden" name="validation" id="validation"> <!-- Field for validation (is not send to processor) -->
         <div id="questiroud-quiz-wrong"></div> <!-- Canvas for error messages for questionnaire -->
         <div id="questiroud-quiz"></div> <!-- Canvas for questionnaire -->
         <div id="questiroud-contact-wrong"></div> <!-- Canvas for error messages for contact -->

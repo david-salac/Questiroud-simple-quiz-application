@@ -1,42 +1,42 @@
 <?php
 /* =================== MAIN CONFIGURATION ================================== */
 define("LINK_TO_JSON", "questions.json");  // Link to JSON file (or URL)
-define("DEBUG_MODE", true); // For running locally only
-define("ALLOW_SAME_ORIGIN", true); // Add header 'Access-Control-Allow-Origin: *'
+define("DEBUG_MODE", true); // For running locally only (does not generate email and file, just print email body in response)
+define("ALLOW_SAME_ORIGIN", true); // Add the header 'Access-Control-Allow-Origin: *'
 define("FILE_PATH_TO_EXPORT", "results.csv"); // Path to file where information about user are exported
 define("EMAIL_COPY_E_MAIL", false);  // Where to send copy of email (false for nowhere)
 /* ========================================================================= */
 
 /* ====================== EMAIL CONFIGURATION ============================== */
 define("EMAIL_SUBJECT", "Evaluation of questionnaire");  // Subject of the email that is send
-define("EMAIL_FROM_NAME", "John Doe");  // From who (name) it comes
+define("EMAIL_FROM_NAME", "Questiroud analysis");  // From who (name) it comes
 define("EMAIL_FROM_E_MAIL", "info@example.com");  // From who (e-mail) it comes
 define("EMAIL_REPLY_E_MAIL", "info@example.com");  // To what email reply
 /* ========================================================================= */
 
 /* ====================== CONTENT DEFINITION =============================== */
-define("ADDRESSING_PREFIX", "Dear ");
-define("ADDRESSING_SUFFIX", ",<p>Here is the certificate from our quiz.</p>");
-define("CONTENT_SUFFIX", "<p>End of the content.</p>");
-define("QUESTION_SCORE_PREFIX", "Score for question: ");
-define("QUESTION_SCORE_SUFFIX", " point.");
-define("TOTAL_SCORE_PREFIX", "Total score: ");
-define("TOTAL_SCORE_SUFFIX", " percent.");
-define("SUCCESS_MESSAGE", "Your questionnaire has been evaluated, please check your email!");
+define("ADDRESSING_PREFIX", "Dear "); // How do you wish to address user
+define("ADDRESSING_SUFFIX", ",<p>Congratulation, you have successfully finished your questionnaire. The following overview analyses your performance.</p>"); // Suffix after addressing (technically everything between content and addressing)
+define("CONTENT_SUFFIX", "<p>Questiround is the application for generation of questionnaires, implementing both front-end and back-end parts with an evaluation of answers send on an email.</p>");  // Technically the last paragraph of email
+define("QUESTION_SCORE_PREFIX", "Score for question: "); // The prefix for score of a question
+define("QUESTION_SCORE_SUFFIX", " point."); // Suffix after score for each question
+define("TOTAL_SCORE_PREFIX", "Total score: ");  // Total score prefix
+define("TOTAL_SCORE_SUFFIX", " percent."); // Total score suffix
+define("SUCCESS_MESSAGE", "Your questionnaire has been evaluated, please check your email!"); // Message that is shown if everything goes well
 /* ========================================================================= */
 
 /* ========================= CSS STYLES FOR ELEMENTS ======================= */
-define("QUESTION_STYLE", "margin: 0 0 5px 0; font-size: 110%;");
-define("OPTION_CORRECT_STYLE", "background: #00C521; padding: 15px; box-sizing: border-box;");
-define("OPTION_INCORRECT_STYLE", "background: #FEA4A4; padding: 15px; box-sizing: border-box;");
-define("OPTION_CORRECT_UNSELECTED_STYLE", "background: #B4F0BE; padding: 15px; box-sizing: border-box;");
-define("OPTION_OTHER_STYLE", "background: #dedede; padding: 15px; box-sizing: border-box;");
-define("QUESTION_WRAPPER_STYLE", "background: #F5F5F5; padding: 15px 20px 15px 20px; box-sizing: border-box; margin-bottom: 20px;");
-define("QUESTION_SCORE_STYLE", "margin-bottom: 0; margin-top: 10px; padding-bottom: 0;");
-define("ALL_QUESTIONS_WRAPPER_STYLE", "padding: 15px; box-sizing: border-box; border: 1px solid #EAEAEA; border-radius: 5px; margin-top: 15px; margin-bottom: 15px");
-define("TOTAL_SCORE_STYLE", "margin: 0;");
-define("CONTENT_WRAPPER_STYLE", "background: #ffffff; padding: 20px; box-sizing: border-box;");
-define("LAYOUT_STYLE", "margin: auto; width: 90%; max-width: 900px; font-family: sans-serif;");
+define("QUESTION_STYLE", "margin: 0 0 5px 0; font-size: 110%;"); // Style for a question text
+define("OPTION_CORRECT_STYLE", "background: #00C521; padding: 15px; box-sizing: border-box;"); // Style for the option that is correct and correctly selected
+define("OPTION_INCORRECT_STYLE", "background: #FEA4A4; padding: 15px; box-sizing: border-box;"); // Style for the option that is incorrectly selected
+define("OPTION_CORRECT_UNSELECTED_STYLE", "background: #B4F0BE; padding: 15px; box-sizing: border-box;"); // Style for the option that is correct but not selected
+define("OPTION_OTHER_STYLE", "background: #dedede; padding: 15px; box-sizing: border-box;"); // Style for the option that is incorrect and not selected (every other option)
+define("QUESTION_WRAPPER_STYLE", "background: #F5F5F5; padding: 15px 20px 15px 20px; box-sizing: border-box; margin-bottom: 20px;"); // Style for the wrapper for one question with options
+define("QUESTION_SCORE_STYLE", "margin-bottom: 0; margin-top: 10px; padding-bottom: 0;"); // Style for the score of a question
+define("ALL_QUESTIONS_WRAPPER_STYLE", "padding: 15px; box-sizing: border-box; border: 1px solid #EAEAEA; border-radius: 5px; margin-top: 15px; margin-bottom: 15px"); // Style for the wrapper of all questions
+define("TOTAL_SCORE_STYLE", "margin: 0;"); // Style for the total score sequence
+define("CONTENT_WRAPPER_STYLE", "background: #ffffff; padding: 20px; box-sizing: border-box;"); // Style for the wrapper of the whole content
+define("LAYOUT_STYLE", "margin: auto; width: 90%; max-width: 900px; font-family: sans-serif;"); // Style defining layout and general styles
 /* ========================================================================= */
 
 /* ===================== SETTING HEADERS =================================== */
@@ -96,7 +96,7 @@ function render_question_options_wrapper($question_plus_options, $score) {
     @param question_plus_options: single HTML question code.
     @param score: score received for answering this particular question.
     */
-    return '<div style="'.QUESTION_WRAPPER_STYLE.'">'.$question_plus_options.'<h3 style="'.QUESTION_SCORE_STYLE.'">'.QUESTION_SCORE_PREFIX.number_format($score, 2).QUESTION_SCORE_SUFFIX."</h3></div>";
+    return '<div style="'.QUESTION_WRAPPER_STYLE.'">'.$question_plus_options.'<p style="'.QUESTION_SCORE_STYLE.'">'.QUESTION_SCORE_PREFIX.number_format($score, 2).QUESTION_SCORE_SUFFIX."</p></div>";
 }
 function render_all_questions_wrapper($all_questions, $total_score, $total_question_number) {
     /**Wrapper for all question plus options. Mainly for adding total score.
@@ -168,9 +168,10 @@ function send_mail_in_utf_8($email_to, $email_body) {
     $headers = "MIME-Version: 1.0\r\n";
     $headers.= "From: =?utf-8?b?".base64_encode(EMAIL_FROM_NAME)."?= <".EMAIL_FROM_E_MAIL.">\r\n";
     $headers.= "Content-Type: text/html;charset=utf-8\r\n";
+    $headers.= "Content-Transfer-Encoding: base64\r\n";
     $headers.= "Reply-To: ".EMAIL_REPLY_E_MAIL."\r\n";
     $headers.= "X-Mailer: PHP/" . phpversion();
-    mail($email_to, $email_subject, $email_body, $headers);
+    mail($email_to, $email_subject, base64_encode($email_body), $headers);
 }
 // ============================================================================
 
