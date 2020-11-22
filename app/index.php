@@ -17,7 +17,7 @@ define("EMAIL_REPLY_E_MAIL", "info@example.com");  // To what email reply
 /* ====================== CONTENT DEFINITION =============================== */
 define("ADDRESSING_PREFIX", "Dear "); // How do you wish to address user
 define("ADDRESSING_SUFFIX", ",<p>Congratulation, you have successfully finished your questionnaire. The following overview analyses your performance.</p>"); // Suffix after addressing (technically everything between content and addressing)
-define("CONTENT_SUFFIX", "<p>Questiround is the application for generation of questionnaires, implementing both front-end and back-end parts with an evaluation of answers send on an email.</p>");  // Technically the last paragraph of email
+define("CONTENT_SUFFIX", "<p>Questiroud is the application for generation of questionnaires, implementing both front-end and back-end parts with an evaluation of answers send on an email.</p>");  // Technically the last paragraph of email
 define("QUESTION_SCORE_PREFIX", "Score for question: "); // The prefix for score of a question
 define("QUESTION_SCORE_SUFFIX", " point."); // Suffix after score for each question
 define("TOTAL_SCORE_PREFIX", "Total score: ");  // Total score prefix

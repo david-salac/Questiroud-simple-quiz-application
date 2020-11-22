@@ -3,7 +3,7 @@
 # Questiroud: a simple application for quiz
 Author: David Salac <https://github.com/david-salac>
 
-Questiround is the application for generation of questionnaires,
+Questiroud is the application for generation of questionnaires,
 implementing both front-end and back-end parts with an evaluation
 of answers send on an email.
 
@@ -81,13 +81,13 @@ and styles in the header (the first one is required). Then, there
 is the part importing Questiroud script itself.
 
 Crucially, you need to configure the connection to the back-end in
-the `questiroad.js` file. There are two variables `JSON_URL` and
+the `questiroud.js` file. There are two variables `JSON_URL` and
 `TARGET_POST_URL`. First one must be a link to JSON file and
 another one the link to the back-end index.php script.
 
 If you wish to modify messages (texts) inside the questionnaire,
 there is a simple way - modify variables on the top of
-`questiroad.js` file if needed.
+`questiroud.js` file if needed.
 
 ## Running Questiroud back-end locally
 To build and run application using PHP Docker images use commands:
