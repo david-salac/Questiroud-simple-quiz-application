@@ -288,15 +288,16 @@ $("#questiroud").submit(function( event ) {
             $.post(
                 TARGET_POST_URL,
                 $("#questiroud").serialize(),
-                function(response, status) {
+                function(response, status) {  /// If post method succeed
                     // Render correct response (message)
                     render_response_correct(response['message']);
-                }).fail(
-                    function(response) {
-                        // Show error message
-                        render_response_wrong(response.responseJSON['message']);
-                    }
-                )
+                }
+            ).fail(  /// If post method fails
+                function(response) {
+                    // Show error message
+                    render_response_wrong(response.responseJSON['message']);
+                }
+            )
         }
     }
 });
