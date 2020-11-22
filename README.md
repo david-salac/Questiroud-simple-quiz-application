@@ -34,7 +34,7 @@ To configure Questiroud you need to know the following information.
 ### Defining questions and answers for questionnaire
 First, you need to set-up questions. It has to be in JSON
 files with the following logic:
-```
+```json5
 {
     "questionnaire": [
         {
@@ -91,7 +91,7 @@ there is a simple way - modify variables on the top of
 
 ## Running Questiroud back-end locally
 To build and run application using PHP Docker images use commands:
-```
+```shell script
 cd docker
 # Build Docker images of PHP that can run the Questiroud
 docker build -t questiroud .
@@ -103,7 +103,12 @@ The starting folder has to be the application folder. The `index.php`
 has to be in debugging mode (set variable `DEBUG` to true, it is on
 the top of the file).
 
-After you do so, your back-end is now running on the address:
+After you do so, your back-end (for setting `TARGET_POST_URL`) is now
+running on the address:
 ```
 http://localhost:5560/
+```
+and JSON object (for setting `JSON_URL`) can be accessed using:
+```
+http://localhost:5560/questions.php
 ```
