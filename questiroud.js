@@ -167,11 +167,11 @@ function render_contact() {
     $("#questiroud-response-wrong").hide();
 
     $("#questiroud-contact").append(CODE_ABOVE_NAME_INPUT);
-    $("#questiroud-contact").append('<input type="text" id="name_of_user" name="name_of_user" class="' + CLASS_NAME_INPUT + '" placeholder="' + PLACEHOLDER_NAME + '" required>');
+    $("#questiroud-contact").append('<input type="text" id="name_of_user" name="name_of_user" class="' + CLASS_NAME_INPUT + '" placeholder="' + PLACEHOLDER_NAME + '" required maxlength="128">');
     $("#questiroud-contact").append(CODE_BELOW_NAME_INPUT);
 
     $("#questiroud-contact").append(CODE_ABOVE_EMAIL_INPUT);
-    $("#questiroud-contact").append('<input type="email" id="address_of_user" name="address_of_user" class="' + CLASS_EMAIL_INPUT + '" placeholder="' + PLACEHOLDER_EMAIL + '" required>');
+    $("#questiroud-contact").append('<input type="email" id="address_of_user" name="address_of_user" class="' + CLASS_EMAIL_INPUT + '" placeholder="' + PLACEHOLDER_EMAIL + '" required maxlength="128">');
     $("#questiroud-contact").append(CODE_BELOW_EMAIL_INPUT);
     $('#questiroud-contact').append('<input class="' + CLASS_SUBMIT_BUTTON + '" type="submit" value="' + SUBMIT_BUTTON_TEXT + '">');
 }
