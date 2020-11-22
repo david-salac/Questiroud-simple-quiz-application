@@ -4,7 +4,7 @@ define("LINK_TO_JSON", "questions.json");  // Link to JSON file (or URL)
 define("DEBUG_MODE", false); // For running locally only (does not generate email and file, just print email body in response)
 define("ALLOW_SAME_ORIGIN", true); // Add the header 'Access-Control-Allow-Origin: *'
 define("FILE_PATH_TO_EXPORT", "results.csv"); // Path to file where information about user are exported
-define("EMAIL_COPY_E_MAIL", false);  // Where to send copy of email (false for nowhere)
+define("EMAIL_COPY_E_MAILS", array());  // Where to send copy of email
 /* ========================================================================= */
 
 /* ====================== EMAIL CONFIGURATION ============================== */
@@ -38,6 +38,15 @@ define("TOTAL_SCORE_STYLE", "margin: 0;"); // Style for the total score sequence
 define("CONTENT_WRAPPER_STYLE", "background: #ffffff; padding: 20px; box-sizing: border-box;"); // Style for the wrapper of the whole content
 define("LAYOUT_STYLE", "margin: auto; width: 90%; max-width: 900px; font-family: sans-serif;"); // Style defining layout and general styles
 /* ========================================================================= */
+
+/* ========================== ERROR MESSAGES =============================== */
+define("ERROR_MAIL_SENDING", "There was a problem with e-mail sending!"); // Message when mail function fails
+define("ERROR_FILE_OPEN", "Cannot open file!"); // Message when file opening fails
+define("ERROR_POST_KEYS", "Wrong post keys passed!"); // Message when there are wrong post keys
+define("ERROR_POST_VALUES", "Wrong post values passed!"); // Message when there are wrong post values
+define("ERROR_E_MAIL", "Wrong e-mail format!"); // Message when e-mail format is wrong
+/* ========================================================================= */
+
 
 /* ===================== SETTING HEADERS =================================== */
 if (ALLOW_SAME_ORIGIN) {
@@ -127,7 +136,7 @@ function render_layout_wrapper($page_content) {
 function file_open_error() {
     /**Return error message with correct status code if cannot open file.*/
     header('HTTP/1.1 500 Internal Server Error', false, 500);
-    return json_encode(array("message" => "Cannot open file!"));
+    return json_encode(array("message" => ERROR_FILE_OPEN));
 }
 function write_to_file($name_of_user, $address_of_user, $total_score) {
     /**Save information about user to file.
@@ -174,16 +183,19 @@ function send_mail_in_utf_8($email_to, $email_body) {
     $headers.= "Content-Transfer-Encoding: base64\r\n";
     $headers.= "Reply-To: ".EMAIL_REPLY_E_MAIL."\r\n";
     $headers.= "X-Mailer: PHP/" . phpversion();
-    mail($email_to, $email_subject, base64_encode($email_body), $headers);
+    if (!mail($email_to, $email_subject, base64_encode($email_body), $headers)) {
+        header('HTTP/1.1 500 Internal Server Error', false, 500);
+        return json_encode(array("message" => ERROR_MAIL_SENDING));
+    }
 }
 // ============================================================================
 
 /* ========== PART FOR EVALUATION AND CONTENT PREPARATION ================== */
 function get_list_of_post_keys($decoded_json) {
-    /**Return list of all acceptable values in JSON for POST keys related
-        to questionnaire answers.
+    /**Return array of all acceptable values in JSON for POST keys related to
+    questionnaire answers.
     @param decoded_json: JSON dataclass with all questions and answers.
-    @return: list of all answers.
+    @return: array of all answers.
     */
     $list_of_options = array();
     $question_order = 0;
@@ -202,8 +214,10 @@ function get_list_of_post_keys($decoded_json) {
 function prepare_result_message($decoded_json, $selected_values, $name_of_user, $address_of_user) {
     /**Prepare the HTML email response.
     @param decoded_json: JSON dataclass with all questions and answers.
-    @param selected_values: Options selected by user.
-    @return: array of 1) HTML code of response, 2) total score
+    @param selected_values: options selected by user.
+    @param name_of_user: name of the user (filled when post).
+    @param address_of_user: e-mail address of user.
+    @return: array with indices 0) HTML code of response, 1) total score
     */
     $questions_code = "";
     $total_score = 0;
@@ -265,7 +279,8 @@ function prepare_result_message($decoded_json, $selected_values, $name_of_user, 
 
 /* ================== REST-ful HANDLING OF REQUEST ========================= */
 function security_validation($value) {
-    /**Validate if the value does not contain un-secure characters.
+    /**Validate if the value does not contain un-secure characters and if
+    the length looks realistic (up to 128 characters and at least one).
     @param $value: string value to be checked.
     @return: true if all is good; false if there is an error.
     */
@@ -274,6 +289,10 @@ function security_validation($value) {
     } if (false !== strpos($value, '"')) {  // No " character
         return false;
     } if (false !== strpos($value, "'")) {  // No ' character
+        return false;
+    } if (strlen($value) > 128) {  // No string bigger than 128 characters
+        return false;
+    } if (strlen($value) < 1) {  // No string shorter than 1 character
         return false;
     }
     return true;
@@ -297,13 +316,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     foreach ($_POST as $key => $value) {
       if (!in_array($key, $expected)) {
         header('HTTP/1.1 400 Bad Request', false, 400);
-        exit(json_encode(array("message" => "Wrong post variables!")));
+        exit(json_encode(array("message" => ERROR_POST_KEYS)));
       }
       if (in_array($key, $question_post_keys)) {
         // Check restricted values
         if(!in_array($value, $expected)) {
             header('HTTP/1.1 400 Bad Request', false, 400);
-            exit(json_encode(array("message" => "Wrong post variables!")));
+            exit(json_encode(array("message" => ERROR_POST_KEYS)));
         }
         else {
             array_push($selected_values, $value);
@@ -311,7 +330,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       }
       if (!security_validation($value)) {
         header('HTTP/1.1 400 Bad Request', false, 400);
-        exit(json_encode(array("message" => "Wrong post values!")));
+        exit(json_encode(array("message" => ERROR_POST_VALUES)));
       }
       $data[$key] = $value;
     }
@@ -323,27 +342,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if(!filter_var($address, FILTER_VALIDATE_EMAIL)) {
         // Incorrect email
         header('HTTP/1.1 400 Bad Request', false, 400);
-        exit(json_encode(array("message" => "Wrong email format!")));
+        exit(json_encode(array("message" => ERROR_E_MAIL)));
     }
 
-    if(strlen($name_of_user) == 0) {
-        // Incorrect email
-        header('HTTP/1.1 400 Bad Request', false, 400);
-        exit(json_encode(array("message" => "Wrong name format!")));
-    }
+    // Generate email HTML code
+    $score_plus_email = prepare_result_message($json_decoded, $selected_values, $name_of_user, $address);
+    $email_body_text = $score_plus_email[0];
+    $total_achieved_score = $score_plus_email[1];
 
-    if (!DEBUG_MODE) {
-        // Send email
-        $score_plus_email = prepare_result_message($json_decoded, $selected_values, $name_of_user, $address);
-        $email_body_text = $score_plus_email[0];
-        $total_achieved_score = $score_plus_email[1];
+    if (!DEBUG_MODE) { // Send email and store info to file
         // Save info about user to file (append if exist)
         write_to_file($name_of_user, $address, $total_achieved_score);
         // Send email to user
         send_mail_in_utf_8($address, $email_body_text);
-        if(EMAIL_COPY_E_MAIL) {
+        foreach (EMAIL_COPY_E_MAILS as $copy_email_address) {
             // Send email to requested copy receiver
-            send_mail_in_utf_8(EMAIL_COPY_E_MAIL, $email_body_text);
+            send_mail_in_utf_8($copy_email_address, $email_body_text);
         }
         // Return 200 if OK
         header('HTTP/1.1 200 OK', false, 200);
@@ -352,7 +366,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // DEBUG (local) mode
         header('HTTP/1.1 200 OK', false, 200);
         // Return the content of the mail in response
-        exit(json_encode(array("message" => prepare_result_message($json_decoded, $selected_values, $name_of_user, $address)[0])));
+        exit(json_encode(array("message" => $email_body_text)));
     }
 }
 

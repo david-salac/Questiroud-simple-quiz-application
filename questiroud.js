@@ -102,6 +102,9 @@ function add_question(question, question_i, is_last) {
 }
 
 function render_questionnaire(json) {
+    /**Render the questionnaire
+    @param json: JSON dictionary defining questions.
+    */
     // Manage content sequence
     $("#questiroud-quiz").show();
     $("#questiroud-quiz-wrong").hide();
@@ -122,7 +125,8 @@ function render_questionnaire(json) {
 }
 
 function validate_questionnaire() {
-    /** Check if all answers are answered.
+    /**Check if all required questions are answered.
+    @return: boolean value where true is if all is OK, false otherwise.
     */
     var _array_of_questions = [];
     _array_of_questions.push($("#validation").val().split(";"));
@@ -152,6 +156,7 @@ function validate_questionnaire() {
 }
 
 function render_contact() {
+    /**Render the contact tab.*/
     // Manage content sequence
     $("#questiroud-quiz").hide();
     $("#questiroud-quiz-wrong").hide();
@@ -172,6 +177,9 @@ function render_contact() {
 }
 
 function render_response_correct(response_message) {
+    /**Render the correct response tab.
+    @param response_message: Message to be print.
+    */
     // Manage content sequence
     $("#questiroud-quiz").hide();
     $("#questiroud-quiz-wrong").hide();
@@ -185,6 +193,9 @@ function render_response_correct(response_message) {
 }
 
 function render_response_wrong(response_message) {
+    /**Render the wrong response tab.
+    @param response_message: Message to be print.
+    */
     // Manage content sequence
     $("#questiroud-quiz").hide();
     $("#questiroud-quiz-wrong").hide();
@@ -198,6 +209,8 @@ function render_response_wrong(response_message) {
 }
 
 function render_waiting_for_response() {
+    /**Render the waiting for response tab.
+    */
     // Manage content sequence
     $("#questiroud-quiz").hide();
     $("#questiroud-quiz-wrong").hide();
@@ -211,7 +224,10 @@ function render_waiting_for_response() {
 }
 
 function validate_email_name() {
-    /*Check if there are no quotation marks in email or name*/
+    /**Quick validation of name and e-mail fields. Check if there are no
+    quotations marks.
+    @return: boolean true if everything is OK, false otherwise.
+    */
     if (String($("#address_of_user").val()).indexOf("'") != -1 || String($("#address_of_user").val()).indexOf('"') != -1) {
         return false;
     }
@@ -222,6 +238,8 @@ function validate_email_name() {
 }
 
 function render_contact_wrong() {
+    /**Render the contact form error message.
+    */
     // Manage content sequence
     $("#questiroud-contact-wrong").show();
     // Render content of response
@@ -232,17 +250,22 @@ function render_contact_wrong() {
 }
 
 $( document ).ready(function() {
+    /// Process JSON
     $.getJSON(JSON_URL, function(json) {
+        /// Render questionnaire
         render_questionnaire(json);
     });
 });
 $("#questiroud").submit(function( event ) {
+    /// Process form submitting
     event.preventDefault();
     if($("#questiroud-contact").is(":hidden") && $("#questiroud-response").is(":hidden")){
+        /// Render contact form
         if (validate_questionnaire()) {
             // Second step, show contact
             render_contact();
         } else {
+            /// Render error message related to questionnaire
             $("#questiroud-quiz-wrong").html(NOT_ALL_REQUIRED_QUESTIONS_ANSWERED);
             $("#questiroud-quiz-wrong").show();
             $('html, body').animate({
@@ -252,9 +275,10 @@ $("#questiroud").submit(function( event ) {
     }
     else if($("#questiroud-quiz").is(":hidden") && $("#questiroud-response").is(":hidden")){
         if (!validate_email_name()) {
+            /// Render error message related to contact form
             render_contact_wrong();
         } else {
-            // Render waiting for response from server message
+            /// Render processing messages
             render_waiting_for_response();
 
             // Remove validation field (no reason to send it to server)
