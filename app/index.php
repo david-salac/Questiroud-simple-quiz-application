@@ -4,7 +4,7 @@ define("LINK_TO_JSON", "questions.json");  // Link to JSON file (or URL)
 define("DEBUG_MODE", false); // For running locally only (does not generate email and file, just print email body in response)
 define("ALLOW_SAME_ORIGIN", true); // Add the header 'Access-Control-Allow-Origin: *'
 define("FILE_PATH_TO_EXPORT", "results.csv"); // Path to file where information about user are exported
-define("EMAIL_COPY_E_MAILS", array());  // Where to send copy of email
+$EMAIL_COPY_E_MAILS = array();  // Where to send copy of email
 /* ========================================================================= */
 
 /* ====================== EMAIL CONFIGURATION ============================== */
@@ -355,7 +355,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         write_to_file($name_of_user, $address, $total_achieved_score);
         // Send email to user
         send_mail_in_utf_8($address, $email_body_text);
-        foreach (EMAIL_COPY_E_MAILS as $copy_email_address) {
+        foreach ($EMAIL_COPY_E_MAILS as $copy_email_address) {
             // Send email to requested copy receiver
             send_mail_in_utf_8($copy_email_address, $email_body_text);
         }
